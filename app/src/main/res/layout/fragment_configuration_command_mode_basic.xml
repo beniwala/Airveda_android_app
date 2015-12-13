@@ -1,0 +1,92 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    tools:context="in.airveda.airvedaapplication.ConfigurationCommandMode$PlaceholderFragment">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_marginBottom="50dp"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="50dp"
+            android:orientation="vertical" >
+            <TextView android:id="@+id/section_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Basic Configuration"
+                />
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:text="Connect to Device"
+                android:id="@+id/button_device_configuration" />
+
+            <!--<Button-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:orientation="vertical"-->
+            <!--android:text="Manage Wifi"-->
+            <!--android:id="@+id/button_wifi" />-->
+
+            <in.airveda.sensors.utils.NonScrollListView
+                android:id="@+id/wifi_list"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                >
+            </in.airveda.sensors.utils.NonScrollListView>
+            <EditText android:id="@+id/wifi_ssid_edittext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:hint="Wifi SSID"
+                android:visibility="gone"
+                />
+            <EditText android:id="@+id/wifi_password_edittext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:hint="Wifi Password"
+                android:visibility="gone"
+                />
+            <!--<Button-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:orientation="vertical"-->
+            <!--android:text="Add Wifi"-->
+            <!--android:visibility="gone"-->
+            <!--android:id="@+id/button_add_wifi" />-->
+
+            <EditText android:id="@+id/device_id_edittext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:hint="Device ID"
+                android:visibility="gone"
+                />
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:text="Save Configuration"
+                android:id="@+id/button_save_configuration" />
+
+            <TextView android:id="@+id/text_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:visibility="gone"
+                />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
