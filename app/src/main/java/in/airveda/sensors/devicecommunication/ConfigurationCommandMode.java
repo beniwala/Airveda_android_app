@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import in.airveda.sensors.airveda.R;
+import in.airveda.sensors.data.Tag;
 
 
 public class ConfigurationCommandMode extends AppCompatActivity implements TelnetCallBack{
@@ -73,11 +74,25 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
 
         sharedPreferences = getSharedPreferences(SHARED_PREFERENCE_NAME, MODE_PRIVATE);
         SharedPreferences.Editor e = sharedPreferences.edit();
+//        e.putString("IP", "192.168.43.96");
+//        e.putInt("Port", 6789);
         e.putString("IP", "192.168.4.1");
-        e.putInt("Port",1336);
+        e.putInt("Port", 1336);
         e.commit();
 
         tm = new TelnetManager(this);
+
+        android.app.AlertDialog.Builder alert = new android.app.AlertDialog.Builder(ConfigurationCommandMode.this);
+
+        alert.setTitle("Configuring Device");
+        alert.setMessage("Please ensure your device is in CONFIG MODE!\n\n Connect to wifi \"Airveda\"");
+
+        alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+            }
+        });
+
+        alert.show();
     }
 
 
@@ -298,6 +313,9 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
             String newPass = wifiPASS.getText().toString().trim();
             int count = 0;
             boolean found = false;
+            if(wifiNamesCopy == null){
+                updateWifiList(new ArrayList<String>(),new ArrayList<String>());
+            }
             if(wifiNamesCopy != null && wifiPasswordsCopy != null){
                 for(int i = 0; i < wifiNamesCopy.size(); i++) {
                     msg += "ssid=" + wifiNamesCopy.get(i) + ";";
@@ -323,6 +341,8 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
         public void configureDevice(){
             switch (status){
                 case PRE_CONNECT:
+//                    String ip = sharedPref.getString("IP","192.168.43.96");
+//                    int port = sharedPref.getInt("Port",6789);
                     String ip = sharedPref.getString("IP","192.168.4.1");
                     int port = sharedPref.getInt("Port",1336);
                     tm.connect(ip, port);
@@ -363,7 +383,7 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
                                 if(msgCount == 5) return;
                                 String msg = "";
                                 String ssidSring = "ssid=NODEF;pass=NODEF;";
-                                if(msgCount < wifiNamesCopy.size()){
+                                if(wifiNamesCopy!= null && msgCount < wifiNamesCopy.size()){
                                     ssidSring = "ssid=" + wifiNamesCopy.get(msgCount) + ";";
                                     ssidSring += "pass=" + wifiPasswordsCopy.get(msgCount) + ";";
                                 }
@@ -378,7 +398,7 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
 //                        tm.sendMessage("set_WIFILIST::" + getWifiListToSend());
                         break;
                     case wmDEVICE:
-                        tm.sendMessage("set_DEVICEID::" + deviceIDEditText.getText().toString());
+                        tm.sendMessage("set_DEVICEID::" + deviceIDEditText.getText().toString().trim() + ";");
                         break;
                     case wmDATETIME:
                         String msg = "";
@@ -394,11 +414,11 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
         public void updateWifiList(final ArrayList<String> wifiNames, ArrayList<String> wifiPasswords){
             wifiNamesCopy = wifiNames;
             wifiPasswordsCopy = wifiPasswords;
+            wifiDataAdapter = new ArrayAdapter<String>(getContext(),
+                    android.R.layout.simple_list_item_1, android.R.id.text1, wifiNamesCopy);
             h.post(new Runnable() {
                 @Override
                 public void run() {
-                    wifiDataAdapter = new ArrayAdapter<String>(getContext(),
-                            android.R.layout.simple_list_item_1, android.R.id.text1, wifiNamesCopy);
                     listWifi.setVisibility(View.VISIBLE);
                     listWifi.setAdapter(wifiDataAdapter);
                     listWifi.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -428,6 +448,11 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
 
         public void updateDeviceID(String d) {
             final String deviceidtext = d;
+            if(deviceidtext != null && deviceidtext.compareTo("") != 0) {
+                spEditor.putString("DeviceID", deviceidtext.trim());
+                spEditor.commit();
+            }
+
             h.post(new Runnable() {
                 @Override
                 public void run() {
@@ -463,7 +488,6 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
             });
 
         }
-
 
     }
 
@@ -616,6 +640,7 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
     public void onMessageReceive(String msg){
         Snackbar.make(mViewPager, msg, Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
+        msg = msg.trim();
         if(msg.startsWith("WIFILIST") && msg.compareTo("WIFILIST::OK") != 0){
             String list = msg.substring(("WIFILIST::".length()), msg.length());
             if(list.length() > 0) {
@@ -625,7 +650,8 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
                 for (int i = 0; i < tempNames.length; i++) {
                     if(tempNames[i].startsWith("ssid=")) {
                         String tempSSID = tempNames[i].substring("ssid=".length(), tempNames[i].length());
-                        if(tempSSID.compareTo("NODEF") == 0) {
+                        tempSSID = tempSSID.trim();
+                        if(tempSSID.compareTo("NODEF") == 0 || tempSSID.compareTo("") == 0 ) {
                             i++;
                             continue;
                         }

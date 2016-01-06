@@ -3,7 +3,10 @@ package in.airveda.sensors.dataview;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Build;
@@ -19,6 +22,7 @@ import android.text.style.StyleSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -58,6 +62,7 @@ import java.util.Random;
 import cz.msebera.android.httpclient.Header;
 import in.airveda.sensors.airveda.R;
 import in.airveda.sensors.data.DataReadings;
+import in.airveda.sensors.data.Tag;
 import in.airveda.sensors.devicecommunication.ConfigurationCommandMode;
 import in.airveda.sensors.utils.AirVedaBackendClient;
 
@@ -75,8 +80,11 @@ public class CurrentDataViewActivity extends AppCompatActivity implements OnChar
 
     private TextView mAdvisoryTitle;
     private TextView mAdvisoryText;
+    String feedname = null;
+    boolean showCityData = false;
 
     Handler handler = new Handler();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,7 +93,7 @@ public class CurrentDataViewActivity extends AppCompatActivity implements OnChar
         setSupportActionBar(toolbar);
 
         Bundle extras = getIntent().getExtras();
-        String feedname = null;
+
         if(extras !=null) {
             feedname = extras.getString("feedname");
         }else{
@@ -121,15 +129,72 @@ public class CurrentDataViewActivity extends AppCompatActivity implements OnChar
 //            }
 //        });
 
-        final Runnable r = new Runnable() {
-            public void run() {
-                startDataSyncTask("airveda", false);
-                handler.postDelayed(this, 30000);
-            }
-        };
+    }
 
-        handler.postDelayed(r, 30000);
-        startDataSyncTask("airveda", true);
+    @Override
+    public void onResume(){
+        super.onResume();
+        showData();
+    }
+
+    private void showData(){
+        if(showCityData){
+            feedname = "delhi";
+            final Runnable r = new Runnable() {
+                public void run() {
+                    startDataSyncTask(feedname, false);
+                    handler.postDelayed(this, 30000);
+                }
+            };
+
+            handler.postDelayed(r, 30000);
+            startDataSyncTask(feedname, true);
+            return;
+        }
+        SharedPreferences sharedPreferences = getSharedPreferences(ConfigurationCommandMode.SHARED_PREFERENCE_NAME, MODE_PRIVATE);
+        String deviceID = sharedPreferences.getString("DeviceID","");
+        if(deviceID.compareTo("") == 0){
+            AlertDialog.Builder alert = new AlertDialog.Builder(CurrentDataViewActivity.this);
+
+            alert.setTitle("Have Device?");
+            alert.setMessage("Press YES to configure device\n Press NO to get general info!");
+
+            alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    Intent intent = new Intent(getBaseContext(), ConfigurationCommandMode.class);
+                    startActivity(intent);
+                }
+            });
+
+            alert.setNegativeButton("Not Yet!", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    feedname = "delhi";
+                    showCityData = true;
+                    final Runnable r = new Runnable() {
+                        public void run() {
+                            startDataSyncTask(feedname, false);
+                            handler.postDelayed(this, 30000);
+                        }
+                    };
+
+                    handler.postDelayed(r, 30000);
+                    startDataSyncTask(feedname, true);
+                }
+            });
+
+            alert.show();
+        }else {
+            feedname = deviceID;
+            final Runnable r = new Runnable() {
+                public void run() {
+                    startDataSyncTask(feedname, false);
+                    handler.postDelayed(this, 30000);
+                }
+            };
+
+            handler.postDelayed(r, 30000);
+            startDataSyncTask(feedname, true);
+        }
     }
 
     public void startDataSyncTask(String feedname, boolean showProgress){
@@ -452,24 +517,24 @@ public class CurrentDataViewActivity extends AppCompatActivity implements OnChar
                     r.put("loc", "Bedroom");
                     r.put("sensor", "PM2.5");
                     AirVedaBackendClient.setAuth("namita", "hello12");
-
 //                    http://52.27.53.140/core/plot_view/?device_choice=1003&time_gap=60&loc=Bedroom&sensor=PM2.5
-                    AirVedaBackendClient.getByURL("http://52.27.53.140/core/data_readings/", r, this);
+                    AirVedaBackendClient.getByURL("http://52.27.53.140/core/data_readings_avg/", r, this);
                     mOldDataType = true;
                     break;
                 case "airveda":
-                    r.put("device_choice","delhi_mm");
+                default:
+                    r.put("device_choice",mFeedName);
                     r.put("loc", "Bedroom");
                     r.put("sensor", "PM2.5");
                     AirVedaBackendClient.setAuth("namita", "hello12");
                     AirVedaBackendClient.getByURL("http://52.27.53.140/core/data_readings_avg/", r, this);
                     mOldDataType = true;
                     break;
-                default:
-                    AirVedaBackendClient.clearCredentials();
-                    AirVedaBackendClient.get("http://sashooj.me:8000/data/cityreadings/", r, this);
-                    mOldDataType = false;
-                    break;
+//                default:
+//                    AirVedaBackendClient.clearCredentials();
+//                    AirVedaBackendClient.get("http://sashooj.me:8000/data/cityreadings/", r, this);
+//                    mOldDataType = false;
+//                    break;
             }
 //            if(mFeedName != null){
 //                r.put("city", mFeedName);
@@ -661,6 +726,18 @@ public class CurrentDataViewActivity extends AppCompatActivity implements OnChar
         if (id == R.id.action_device_config) {
             Intent intent = new Intent(getBaseContext(), ConfigurationCommandMode.class);
             startActivity(intent);
+            return true;
+        }
+
+        if (id == R.id.action_my_data) {
+            showCityData = false;
+            showData();
+            return true;
+        }
+
+        if (id == R.id.action_city_data) {
+            showCityData = true;
+            showData();
             return true;
         }
 

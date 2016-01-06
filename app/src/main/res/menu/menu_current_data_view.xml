@@ -4,5 +4,9 @@
     <item android:id="@+id/action_aqi_reference" android:title="What's AQI?"
         android:orderInCategory="100" app:showAsAction="never" />
     <item android:id="@+id/action_device_config" android:title="Manage Device"
-        android:orderInCategory="100" app:showAsAction="never" />
+        android:orderInCategory="200" app:showAsAction="never" />
+    <item android:id="@+id/action_my_data" android:title="My Data"
+        android:orderInCategory="300" app:showAsAction="never" />
+    <item android:id="@+id/action_city_data" android:title="City Data"
+        android:orderInCategory="400" app:showAsAction="never" />
 </menu>

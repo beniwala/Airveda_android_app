@@ -15,7 +15,7 @@ import cz.msebera.android.httpclient.entity.StringEntity;
  */
 public class AirVedaBackendClient {
 //    private static final String BASE_URL = "https://www.google.co.in/#q=hi";
-    private static final String BASE_URL = "http://192.168.43.96:8000/";
+    private static final String BASE_URL = "http://sashooj.me:8000/";
 
 
     private static AsyncHttpClient client = new AsyncHttpClient();
