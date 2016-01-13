@@ -4,7 +4,6 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -31,10 +30,9 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import in.airveda.sensors.airveda.R;
-import in.airveda.sensors.data.Tag;
 
 
-public class ConfigurationCommandMode extends AppCompatActivity implements TelnetCallBack{
+public class UserDeviceConfigActivity extends AppCompatActivity implements TelnetCallBack{
 
     public static String SHARED_PREFERENCE_NAME = "AirvedaDeviceSimulatorPreferences";
 
@@ -82,7 +80,7 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
 
         tm = new TelnetManager(this);
 
-        android.app.AlertDialog.Builder alert = new android.app.AlertDialog.Builder(ConfigurationCommandMode.this);
+        android.app.AlertDialog.Builder alert = new android.app.AlertDialog.Builder(UserDeviceConfigActivity.this);
 
         alert.setTitle("Configuring Device");
         alert.setMessage("Please ensure your device is in CONFIG MODE!\n\n Connect to wifi \"Airveda\"");
@@ -390,11 +388,11 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
                                 msg = "set_WIFI" + (msgCount  + 1) + "::"+ ssidSring;
                                 tm.sendMessage(msg);
                                 msgCount++;
-                                handler.postDelayed(this, 150);
+                                handler.postDelayed(this, 500);
                             }
                         };
 
-                        handler.postDelayed(r, 150);
+                        handler.postDelayed(r, 500);
 //                        tm.sendMessage("set_WIFILIST::" + getWifiListToSend());
                         break;
                     case wmDEVICE:
@@ -501,12 +499,6 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
         EditText edit_update_freq;
         Button setDateTime;
 
-        Button button_get_device_name;
-        Button button_set_all_done;
-        Button button_set_device_name;
-
-        EditText edit_device_name;
-
 
 
         public AdvancedConfigurationFragment() {
@@ -532,14 +524,6 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
             edit_update_freq = (EditText) rootView.findViewById(R.id.update_freq_edittext);
             button_update_freq = (Button) rootView.findViewById(R.id.button_updateFreq);
             button_update_freq.setOnClickListener(this);
-
-            button_get_device_name = (Button) rootView.findViewById(R.id.get_button_devicename);
-            button_get_device_name.setOnClickListener(this);
-            button_set_device_name = (Button) rootView.findViewById(R.id.set_button_devicename);
-            button_set_device_name.setOnClickListener(this);
-            button_set_all_done = (Button) rootView.findViewById(R.id.alldone_button);
-            button_set_all_done.setOnClickListener(this);
-            edit_device_name = (EditText) rootView.findViewById(R.id.device_name);
 
             return rootView;
         }
@@ -579,42 +563,15 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
                     alert.show();
                 }
                 break;
-                case R.id.set_button_devicename: {
-                    String dname = edit_device_name.getText().toString().trim();
-                    if(dname.compareTo("") != 0) {
-                        String msg = "set_NAME::" + dname + ";";
-                        tm.sendMessage(msg);
-                    }else{
-                        AlertDialog.Builder alert = new AlertDialog.Builder(getContext());
-                        alert.setTitle("Error!");
-                        alert.setMessage("Name cannot be empty!");
-                        alert.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        });
-
-                        alert.show();
-                    }
-                }
-                break;
-                case R.id.get_button_devicename: {
-                    String msg = "get_NAME";
-                    tm.sendMessage(msg);
-                }
-                break;
-                case R.id.alldone_button: {
-                    String msg = "set_ALLDONE";
+                case R.id.button_date_time: {
+                    String msg = "set_DATETIME::";
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    msg += sdf.format(new Date(System.currentTimeMillis()));
                     tm.sendMessage(msg);
                 }
                 break;
 
             }
-        }
-
-        public void updateDeviceName(String name) {
-            edit_device_name.setText(name);
         }
     }
 
@@ -719,18 +676,6 @@ public class ConfigurationCommandMode extends AppCompatActivity implements Telne
                 bfm.configureDevice();
             }
         }
-        if(msg.startsWith("NAME") && msg.compareTo("NAME::OK") != 0){
-            final String d = msg.substring(("NAME::".length()), msg.length());
-            if(d.length() > 0) {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        afm.updateDeviceName(d);
-                    }
-                });
-            }
-        }
-
         if(bfm.status == BasicConfigurationFragment.WRITING_DATA){
             switch (bfm.writing_mode){
                 case BasicConfigurationFragment.wmWIFI:
